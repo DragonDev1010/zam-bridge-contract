@@ -1,7 +1,9 @@
-const Migrations = artifacts.require("Migrations");
 const Verifier = artifacts.require("Verifier")
+const ZamToken = artifacts.require("ZamToken")
+const Bridge = artifacts.require("Bridge")
 
-module.exports = function (deployer) {
-  deployer.deploy(Migrations);
-  deployer.deploy(Verifier)
+module.exports = async function (deployer) {
+	await deployer.deploy(Verifier)
+	await deployer.deploy(ZamToken)
+	await deployer.deploy(Bridge, ZamToken.address)
 };
