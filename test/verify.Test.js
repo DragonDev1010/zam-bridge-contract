@@ -14,11 +14,12 @@ contract("Verify contract", (accounts) => {
     })
 
     it("recover address", async() => {
-        let msg = 'I really did make this message'
-        let signature = web3.eth.accounts.sign( '0x' + toHex(msg), "0x28498b1f43cc296820bb38e4010d7dfe4e6812acddc1b1a8cf96ea3ceaadd506")
-        console.log(signature)
+        let signerPrivateKey = "0xc5ddfd0eee47c457c81e436679f223cbab5c4e23d28558b44cd42b549a986af8"
 
-        let tx = await verifier.recoverAddr(signature.messageHash, Number(signature.v), signature.r, signature.s)
-        console.log(tx)
+        let msg = '100'
+        let signature = web3.eth.accounts.sign( '0x' + toHex(msg), signerPrivateKey)
+
+        let tx = await verifier.recoverAddr(signature.messageHash, Number(signature.v), signature.r, signature.s, msg)
+        await verifier.recoverAddr(signature.messageHash, Number(signature.v), signature.r, signature.s, msg)
     })
 })
