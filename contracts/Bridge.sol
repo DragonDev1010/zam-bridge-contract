@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Bridge is Ownable {
     IERC20 zamToken;
     address public signer;
+    mapping(bytes32 => bool) public executedXId;
 
     event Locked(bytes32 transferId);
     event Unlocked(uint256 amount);
@@ -21,10 +22,32 @@ contract Bridge is Ownable {
         emit Locked(transferId);
     }
 
-    function unlock(uint256 amount, bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) public {
+    function unlock (bytes memory unlockRequest, bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) public {
+        bytes32 xId = keccak256(abi.encodePacked(unlockRequest));
+        require(!executedXId[xId], "This request was already executed.");
         require(_isSigned(signer, msgHash, v, r, s), "failed to verify");
+
+        uint256 srcXId;
+        uint256 amount;
+        address sender;
+        ( srcXId, amount, sender ) = parseABI(unlockRequest);
         zamToken.transfer(msg.sender, amount);
-        emit Unlocked(amount);
+        executedXId[xId] = true;
+    }
+
+    event Parsed(uint256 srcXId, uint256 amount, address sender);
+    function parseABI (bytes memory request) public returns(uint256, uint256, address) {
+        uint256 srcXId;
+        uint256 amount;
+        address sender;
+
+        assembly {
+            srcXId := mload(add(request, 0x20))
+            amount := mload(add(request, 0x40))
+            sender := mload(add(request, 0x60))
+        }
+        emit Parsed(srcXId, amount, sender);
+        return (srcXId, amount, sender);
     }
 
     function _isSigned(address _addr, bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) private pure returns (bool) {
