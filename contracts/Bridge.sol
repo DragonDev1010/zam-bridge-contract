@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Bridge is Ownable {
-    IERC20 zamToken;
+    IERC20 token;
     address public signer;
     mapping(bytes32 => bool) public executedXId;
 
@@ -13,11 +13,11 @@ contract Bridge is Ownable {
     event Unlocked(uint256 amount);
 
     constructor(address tokenAddr) {
-        zamToken = IERC20(tokenAddr);
+        token = IERC20(tokenAddr);
     }
 
     function lock(uint256 amount) public {
-        zamToken.transferFrom(msg.sender, address(this), amount);
+        token.transferFrom(msg.sender, address(this), amount);
         bytes32 transferId = keccak256(abi.encodePacked(msg.sender, amount));
         emit Locked(transferId);
     }
@@ -30,13 +30,12 @@ contract Bridge is Ownable {
         uint256 srcXId;
         uint256 amount;
         address sender;
-        ( srcXId, amount, sender ) = parseABI(unlockRequest);
-        zamToken.transfer(msg.sender, amount);
+        ( srcXId, amount, sender ) = _parseABI(unlockRequest);
+        token.transfer(msg.sender, amount);
         executedXId[xId] = true;
     }
 
-    event Parsed(uint256 srcXId, uint256 amount, address sender);
-    function parseABI (bytes memory request) public returns(uint256, uint256, address) {
+    function _parseABI (bytes memory request) private pure returns(uint256, uint256, address) {
         uint256 srcXId;
         uint256 amount;
         address sender;
@@ -46,7 +45,6 @@ contract Bridge is Ownable {
             amount := mload(add(request, 0x40))
             sender := mload(add(request, 0x60))
         }
-        emit Parsed(srcXId, amount, sender);
         return (srcXId, amount, sender);
     }
 
