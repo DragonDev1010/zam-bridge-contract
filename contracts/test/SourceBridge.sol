@@ -73,6 +73,6 @@ contract SourceBridge is Ownable {
         require(bridgeTokens[token], 'The token is not registered in this bridge.');
         uint256 amount = IERC20(token).balanceOf(address(this));
         require(amount > 0, 'This bridge does not have this token now.');
-        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(token).safeTransfer(msg.sender, amount);
     }
 }
