@@ -10,21 +10,26 @@ contract SourceBridge is Ownable {
     uint256 bridgeFee;
     address public signer;
     mapping(bytes32 => bool) public executedXId;
+    mapping(bytes32 => bool) private usedMsgHash;
     mapping(address => bool) public bridgeTokens;
     
+    uint256 private locked;
+
     event Locked(bytes32 transferId);
     event Unlocked(uint256 amount);
 
     function lock(address token_, uint256 amount) public {
         require(bridgeTokens[token_], 'Token is not registered in this bridge.');
         IERC20(token_).safeTransferFrom(msg.sender, address(this), amount);
-        bytes32 transferId = keccak256(abi.encodePacked(msg.sender, amount));
+        bytes32 transferId = keccak256(abi.encodePacked(msg.sender, amount, (locked*37), block.timestamp));
+        locked++;
         emit Locked(transferId);
     }
 
     function unlock (bytes memory unlockRequest, bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) public {
         bytes32 xId = keccak256(abi.encodePacked(unlockRequest));
         require(!executedXId[xId], "This request was already executed.");
+        require(!usedMsgHash[msgHash], 'The message signature hash was already used.');
         require(_isSigned(signer, msgHash, v, r, s), "failed to verify");
 
         uint256 srcXId;
@@ -34,6 +39,7 @@ contract SourceBridge is Ownable {
         ( srcXId, amount, sender, token_ ) = _parseABI(unlockRequest);
         IERC20(token_).safeTransfer(msg.sender, amount*(100-bridgeFee)/100);
         executedXId[xId] = true;
+        usedMsgHash[msgHash] = true;
     }
 
     function _parseABI (bytes memory request) private pure returns(uint256, uint256, address, address) {
