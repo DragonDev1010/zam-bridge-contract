@@ -37,7 +37,7 @@ contract DestinationBridge is Ownable {
         address sender;
         address token_;
         ( srcXId, amount, sender, token_ ) = _parseABI(unlockRequest);
-        IERC20(token_).safeTransfer(msg.sender, amount*(100-bridgeFee)/100);
+        IERC20(token_).safeTransfer(sender, amount*(100-bridgeFee)/100);
         executedXId[xId] = true;
         usedMsgHash[msgHash] = true;
     }

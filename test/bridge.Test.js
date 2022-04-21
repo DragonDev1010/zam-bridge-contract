@@ -10,7 +10,7 @@ contract("bridge contract", (accounts) => {
     let signer, signerPrivateKey
 
     signer = accounts[9]
-    signerPrivateKey = "0xe02cea5344c2b39003b78ad6e38345c5928e256756dd49e5cecedfbb092da8a7"
+    signerPrivateKey = "0x51b3dc8d026e9d1d95309a719fa0be96217c4d38fa41d5c8fa419a33a4be020e"
 
     function getNewXId(s) {
         let tail = s.substring(29, 34)
