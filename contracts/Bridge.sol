@@ -20,9 +20,9 @@ contract Bridge is Ownable {
 
     function lock(address token_, uint256 amount) public {
         require(bridgeTokens[token_], 'Token is not registered in this bridge.');
-        IERC20(token_).safeTransferFrom(msg.sender, address(this), amount);
         bytes32 transferId = keccak256(abi.encodePacked(msg.sender, amount, (locked*37), block.timestamp));
         locked++;
+        IERC20(token_).safeTransferFrom(msg.sender, address(this), amount);
         emit Locked(transferId);
     }
 
@@ -37,9 +37,9 @@ contract Bridge is Ownable {
         address sender;
         address token_;
         ( srcXId, amount, sender, token_ ) = _parseABI(unlockRequest);
-        IERC20(token_).safeTransfer(sender, amount*(100-bridgeFee)/100);
         executedXId[xId] = true;
         usedMsgHash[msgHash] = true;
+        IERC20(token_).safeTransfer(sender, amount*(100-bridgeFee)/100);
     }
 
     function _parseABI (bytes memory request) private pure returns(uint256, uint256, address, address) {
