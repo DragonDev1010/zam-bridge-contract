@@ -43,17 +43,8 @@ contract Bridge is Ownable {
     }
 
     function _parseABI (bytes memory request) private pure returns(uint256, uint256, address, address) {
-        uint256 srcXId;
-        uint256 amount;
-        address sender;
-        address token_;
-
-        assembly {
-            srcXId := mload(add(request, 0x20))
-            amount := mload(add(request, 0x40))
-            sender := mload(add(request, 0x60))
-            token_ := mload(add(request, 0x80))
-        }
+        require(request.length == 128, 'Send Bytes data is not correct size');
+        (uint256 srcXId, uint256 amount, address sender, address token_) = abi.decode(request, (uint256, uint256, address, address));
         return (srcXId, amount, sender, token_);
     }
 

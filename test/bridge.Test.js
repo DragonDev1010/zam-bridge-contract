@@ -10,7 +10,7 @@ contract("bridge contract", (accounts) => {
     let signer, signerPrivateKey
 
     signer = accounts[9]
-    signerPrivateKey = "0x51b3dc8d026e9d1d95309a719fa0be96217c4d38fa41d5c8fa419a33a4be020e"
+    signerPrivateKey = "0x1e3fa634e56fe2a88723f3e14e1dc8398da1d3bcffbc3b722c7a2a7c21dc4cc1"
 
     function getNewXId(s) {
         let tail = s.substring(29, 34)
@@ -75,10 +75,23 @@ contract("bridge contract", (accounts) => {
         let unlockedAmount = web3.utils.toWei('10', 'ether')
         let msg = web3.eth.abi.encodeParameters(['uint256', 'uint256', 'address', 'address'],[srcXId, unlockedAmount, sender, token.address])
         let signature = web3.eth.accounts.sign( msg, signerPrivateKey)
+
+        try {
+            // use shorten `msg` data
+            let shortMsg = '0x07f86015955e72b173fbf5d2aeadde0f52352a1f9787f9076bb4e21b5158dad300000000000000000000000000'
+            await dest.unlock(shortMsg, signature.messageHash, Number(signature.v), signature.r, signature.s, {from: accounts[0]})    
+        } catch (e) {
+            console.log('Case of short message: ', e.reason)
+        }
+        try {
+            // use longer `msg` data
+            let longerMsg = '0x07f86015955e72b173fbf5d2aeadde0f52352a1f9787f9076bb4e21b5158dad30000000000000000000000000000000000000000000000008ac7230489e80000000000000000000000000000084aa8e6d5e9149337c01a074651bda66e326a9f000000000000000000000000f5d57591e69ba47275c742dbaa65e4fb28c4c89c234234bac9AA8518B6BD3382F84E'
+            await dest.unlock(longerMsg, signature.messageHash, Number(signature.v), signature.r, signature.s, {from: accounts[0]})    
+        } catch (e) {
+            console.log('Case of longer message: ', e.reason)
+        }        
         await dest.unlock(msg, signature.messageHash, Number(signature.v), signature.r, signature.s, {from: accounts[0]})
 
-        console.log(srcXId)
-        console.log(getNewXId(srcXId))
         try {
             // duplicate signature
             msg = web3.eth.abi.encodeParameters(['uint256', 'uint256', 'address', 'address'],[getNewXId(srcXId), unlockedAmount, sender, token.address])
